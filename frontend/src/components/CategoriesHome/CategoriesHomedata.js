@@ -6,7 +6,7 @@ import PatekPhilippe from "../../assets/PatekPhilippe.png"
 import Cartier from "../../assets/Cartier.png"
 import Brietling from "../../assets/Brietling.webp"
 import IWC from "../../assets/IWC.png"
-import Hublot from "../../assets/Hublot.png";
+import Hublot from "../../assets/hublot.png";
 
 import TagHeuer from "../../assets/TagHeuer.png"
 import JaegerLeCoultre from "../../assets/JaegerLeCoultre.png"
