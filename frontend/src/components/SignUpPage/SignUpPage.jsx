@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ArrowLeft, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { api } from "../../utils/api";
 import { signUpStyles } from "../../assets/dummyStyles";
 
 export default function SignUpPage() {
@@ -14,8 +14,6 @@ export default function SignUpPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  const API_BASE = "http://localhost:4000"; // adjust if different
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,28 +39,15 @@ export default function SignUpPage() {
       return;
     }
 
-    // require remember me explicitly (keeps your original UX)
-    if (!rememberMe) {
-      toast.error("Please tick 'Remember me' to continue.", {
-        position: "top-right",
-        autoClose: 4000,
-        theme: "light",
-      });
-      return;
-    }
-
     setSubmitting(true);
 
     try {
-      const resp = await axios.post(
-        `${API_BASE}/api/auth/register`,
+      const resp = await api.post(
+        "/auth/register",
         {
           name: name.trim(),
           email: email.trim().toLowerCase(),
           password,
-        },
-        {
-          headers: { "Content-Type": "application/json" },
         }
       );
 

@@ -1,22 +1,14 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { ShoppingBag, Calendar, Package, Eye, EyeOff } from "lucide-react";
+import { api } from "../../utils/api";
 import { ordersPageStyles } from "../../assets/dummyStyles";
-
-const API_BASE = "http://localhost:4000/api";
+import { clearAuthStorage, getAuthToken } from "../../utils/authStorage";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [expanded, setExpanded] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
-  const axiosInstance = axios.create({
-    baseURL: API_BASE,
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
 
   useEffect(() => {
     fetchOrders();
@@ -27,7 +19,7 @@ export default function OrdersPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await axiosInstance.get("/orders/my");
+      const res = await api.get("/api/orders/my");
       const payload = res?.data;
       const list = Array.isArray(payload?.orders)
         ? payload.orders
@@ -36,6 +28,7 @@ export default function OrdersPage() {
         : payload?.orders ?? [];
       setOrders(list);
     } catch (err) {
+      if (err?.response?.status === 401) clearAuthStorage();
       console.error("Failed to fetch orders:", err);
       setError(
         err?.response?.data?.message || err.message || "Failed to load orders"
@@ -102,8 +95,9 @@ export default function OrdersPage() {
       )
     );
     try {
-      await axiosInstance.put(`/orders/${id}`, { orderStatus: "Cancelled" });
+      await api.put(`/api/orders/${id}`, { orderStatus: "Cancelled" });
     } catch (err) {
+      if (err?.response?.status === 401) clearAuthStorage();
       console.error("Cancel order failed", err);
       setOrders(prev);
       alert(err?.response?.data?.message || "Failed to cancel order");

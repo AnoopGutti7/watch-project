@@ -16,7 +16,7 @@ import { contactPageStyles } from "../../assets/dummyStyles";
 
 export default function ContactPage() {
   // Put your business WhatsApp number (country code + number, no '+')
-  const WHATSAPP_NUMBER = "918299431275";
+  const WHATSAPP_NUMBER = "919972119465";
 
   const initialForm = {
     name: "",

@@ -5,50 +5,9 @@ import { useCart } from "../../CartContext";
 import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import { api, normalizeImageUrl } from "../../utils/api";
 import { cartPageStyles } from "../../assets/dummyStyles";
-
-const API_BASE = "http://localhost:4000";
-
-// --- helper: normalize image URLs so deployed frontend doesn't try to reach localhost ---
-function normalizeImageUrl(raw) {
-  if (!raw) return "";
-  if (typeof raw !== "string") return "";
-
-  // derive base host for images (strip possible /api suffix)
-  const baseHost = API_BASE.replace(/\/api\/?$/i, "") || API_BASE;
-
-  // Relative path -> prefix with baseHost
-  if (raw.startsWith("/")) {
-    return `${baseHost}${raw}`;
-  }
-
-  // Replace any localhost or 127.0.0.1 origin with production host
-  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(raw)) {
-    return raw.replace(
-      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i,
-      baseHost
-    );
-  }
-
-  // If frontend is served over https and raw is http, try upgrading to https (avoid mixed content)
-  if (
-    raw.startsWith("http://") &&
-    typeof window !== "undefined" &&
-    window.location.protocol === "https:"
-  ) {
-    try {
-      const u = new URL(raw);
-      u.protocol = "https:";
-      return u.toString();
-    } catch (e) {
-      // fallback to raw if parsing fails
-    }
-  }
-
-  return raw;
-}
-// --- end helper ---------------------------------------------------------------
+import { clearAuthStorage, getAuthToken } from "../../utils/authStorage";
 
 function CartProduct({ item }) {
   const { increment, decrement, removeItem } = useCart();
@@ -179,7 +138,7 @@ export default function CartPage() {
       return;
     }
 
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (!token) {
       toast.error("Please log in to place the order.", {
         position: "top-right",
@@ -207,9 +166,7 @@ export default function CartPage() {
 
     setSubmitting(true);
     try {
-      const res = await axios.post(`${API_BASE}/api/orders`, body, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.post("/orders", body);
 
       if (res?.data?.success) {
         const checkoutUrl = res.data.checkoutUrl ?? null;
@@ -236,6 +193,7 @@ export default function CartPage() {
       const status = err?.response?.status;
       const serverMsg = err?.response?.data?.message;
       if (status === 401) {
+        clearAuthStorage();
         toast.error("Authentication error — please log in again.", {
           position: "top-right",
         });

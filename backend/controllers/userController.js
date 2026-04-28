@@ -1,78 +1,102 @@
-import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import validator from "validator";
 import User from "../models/userModel.js";
 
 const TOKEN_EXPIRES_IN = "24h";
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_here";
+const JWT_SECRET = process.env.JWT_SECRET || "secret123";
 
-export async function register(req, res) {
+// ================= REGISTER =================
+export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required." });
+      return res.status(400).json({ message: "All fields required" });
     }
+
     if (!validator.isEmail(email)) {
-      return res.status(400).json({ success: false, message: "Invalid email." });
+      return res.status(400).json({ message: "Invalid email" });
     }
 
-    const exists = await User.findOne({ email }).lean();
-    if (exists) return res.status(409).json({ success: false, message: "User already exists." });
+    const exists = await User.findOne({ email });
+    if (exists) {
+      return res.status(409).json({ message: "User already exists" });
+    }
 
-    const newId = new mongoose.Types.ObjectId();
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({
-      _id: newId,
+    const user = await User.create({
       name,
       email,
       password: hashedPassword,
     });
 
-    await user.save();
+    const token = jwt.sign(
+      { id: user._id.toString() },
+      JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRES_IN }
+    );
 
-    if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined on the server");
-
-    const token = jwt.sign({ id: newId.toString() }, JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
-
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
-      message: "Account created successfully.",
       token,
-      user: { id: user._id.toString(), name: user.name, email: user.email },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      message: "Register successful",
     });
-  } catch (err) {
-    console.error("Register error:", err);
-    return res.status(500).json({ success: false, message: "Server error." });
-  }
-}
 
-export async function login(req, res) {
+  } catch (err) {
+    console.error("REGISTER ERROR:", err);
+    const status = err?.code === 11000 ? 409 : 500;
+    const message = err?.code === 11000 ? "Email already registered." : err?.message || "Server error";
+    res.status(status).json({ success: false, message });
+  }
+};
+
+// ================= LOGIN =================
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required." });
+      return res.status(400).json({ message: "All fields required" });
     }
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ success: false, message: "Invalid email or password." });
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ success: false, message: "Invalid email or password." });
 
-    const token = jwt.sign({ id: user._id.toString() }, JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
 
-    return res.status(200).json({
+    const token = jwt.sign(
+      { id: user._id.toString() },
+      JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRES_IN }
+    );
+
+    res.status(200).json({
       success: true,
-      message: "Login successful!",
       token,
-      user: { id: user._id.toString(), name: user.name, email: user.email },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      message: "Login successful",
     });
+
   } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({ success: false, message: "Server error." });
+    console.error("LOGIN ERROR:", err);
+    res.status(500).json({ message: err?.message || "Server error" });
   }
-}
+};

@@ -6,25 +6,11 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import axios from "axios";
+import { api } from "./utils/api";
+import { clearAuthStorage, getAuthToken } from "./utils/authStorage";
 
 const CartContext = createContext();
 const STORAGE_KEY = "cartItems";
-const API_BASE = "http://localhost:4000";
-
-const api = axios.create({
-  baseURL: API_BASE,
-  headers: { "Content-Type": "application/json" },
-});
-
-api.interceptors.request.use((cfg) => {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    cfg.headers = cfg.headers || {};
-    cfg.headers.Authorization = `Bearer ${token}`;
-  }
-  return cfg;
-});
 
 const normalizeServerItem = (it) => {
   const productId = String(it.productId);
@@ -54,17 +40,20 @@ const getInitialState = () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     const items = Array.isArray(parsed)
-      ? parsed.map((it) => ({
-          id: String(it._id),
-          productId: String(it.productId),
-          name: it.name,
-          img: it.img ?? it.image ?? "",
-          price: Number(it.price),
-          quantity: Number(it.qty ?? it.quantity ?? 0),
-          description: it.description ?? "",
-        }))
+      ? parsed.map((it) => {
+          const id = String(it.id ?? it._id ?? it.productId ?? "");
+          const productId = String(it.productId ?? it.id ?? it._id ?? "");
+          return {
+            id,
+            productId,
+            name: it.name,
+            img: it.img ?? it.image ?? "",
+            price: Number(it.price),
+            quantity: Number(it.qty ?? it.quantity ?? 0),
+            description: it.description ?? it.desc ?? "",
+          };
+        })
       : [];
-    // console.log(items);
     return { items };
   } catch {
     return { items: [] };
@@ -153,10 +142,10 @@ export const CartProvider = ({ children }) => {
   );
 
   const fetchCart = useCallback(async () => {
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (!token) return;
     try {
-      const res = await api.get("/api/cart");
+      const res = await api.get("/cart");
       if (res?.data?.success && Array.isArray(res.data.cart?.items)) {
         dispatch({
           type: ACTIONS.LOAD_CART,
@@ -164,6 +153,7 @@ export const CartProvider = ({ children }) => {
         });
       }
     } catch (err) {
+      if (err?.response?.status === 401) clearAuthStorage();
       console.warn("Failed to fetch server cart:", err?.message || err);
     }
   }, []);
@@ -187,7 +177,7 @@ export const CartProvider = ({ children }) => {
 
   const addItem = async (product) => {
     console.log(product);
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     const id = String(product.id ?? product.productId ?? "");
     const payloadForServer = {
       productId: id,
@@ -200,7 +190,7 @@ export const CartProvider = ({ children }) => {
 
     if (token) {
       try {
-        const res = await api.post("/api/cart/add", payloadForServer);
+        const res = await api.post("/cart/add", payloadForServer);
         if (res?.data?.success && Array.isArray(res.data.cart?.items)) {
           dispatch({
             type: ACTIONS.LOAD_CART,
@@ -209,6 +199,7 @@ export const CartProvider = ({ children }) => {
           return;
         }
       } catch (err) {
+        if (err?.response?.status === 401) clearAuthStorage();
         console.warn(
           "Server add failed — falling back to local:",
           err?.message || err
@@ -227,17 +218,18 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateCartItem = async ({ id, quantity }) => {
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     const numQty = Number(quantity);
     if (token) {
       try {
-        await api.put("/api/cart/update", { productId: id, quantity: numQty });
+        await api.put("/cart/update", { productId: id, quantity: numQty });
         dispatch({
           type: ACTIONS.UPDATE_ITEM,
           payload: { id, quantity: numQty },
         });
         return;
       } catch (err) {
+        if (err?.response?.status === 401) clearAuthStorage();
         console.warn(
           "Server update failed — applying local:",
           err?.message || err
@@ -256,21 +248,22 @@ export const CartProvider = ({ children }) => {
   const decrement = async (id) => {
     const existing = state.items.find((i) => String(i.id) === String(id));
     const next = existing ? Math.max(0, Number(existing.quantity || 0) - 1) : 0;
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (token) {
       try {
         if (next === 0) {
-          await api.delete(`/api/cart/remove/${encodeURIComponent(id)}`);
+          await api.delete(`/cart/remove/${encodeURIComponent(id)}`);
           dispatch({ type: ACTIONS.REMOVE_ITEM, payload: { id } });
           return;
         }
-        await api.put("/api/cart/update", { productId: id, quantity: next });
+        await api.put("/cart/update", { productId: id, quantity: next });
         dispatch({
           type: ACTIONS.UPDATE_ITEM,
           payload: { id, quantity: next },
         });
         return;
       } catch (err) {
+        if (err?.response?.status === 401) clearAuthStorage();
         console.warn(
           "Server decrement failed — applying local:",
           err?.message || err
@@ -283,13 +276,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeItem = async (id) => {
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (token) {
       try {
-        await api.delete(`/api/cart/remove/${encodeURIComponent(id)}`);
+        await api.delete(`/cart/remove/${encodeURIComponent(id)}`);
         dispatch({ type: ACTIONS.REMOVE_ITEM, payload: { id } });
         return;
       } catch (err) {
+        if (err?.response?.status === 401) clearAuthStorage();
         console.warn(
           "Server remove failed — removing locally:",
           err?.message || err
@@ -300,13 +294,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const clearCart = async () => {
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (token) {
       try {
-        await api.delete("/api/cart/clear");
+        await api.delete("/cart/clear");
         dispatch({ type: ACTIONS.CLEAR_CART });
         return;
       } catch (err) {
+        if (err?.response?.status === 401) clearAuthStorage();
         console.warn(
           "Server clear failed — clearing locally:",
           err?.message || err

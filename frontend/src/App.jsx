@@ -1,7 +1,7 @@
 // src/App.jsx
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { ArrowUp } from "lucide-react"; // lucide icon
+import { Routes, Route, useLocation } from "react-router-dom";
+import { ArrowUp } from "lucide-react";
 
 import Home from "./pages/Home/Home";
 import Watches from "./pages/Watches/Watches";
@@ -13,41 +13,15 @@ import Cart from "./pages/Cart/Cart";
 import Orders from "./pages/Orders/Orders";
 import VerifyPaymentPage from "../VerifyPaymentPage";
 
-/* ScrollToTopOnRouteChange: uses useLocation — OK because App is inside BrowserRouter in index.jsx */
+/* ScrollToTopOnRouteChange */
 function ScrollToTopOnRouteChange() {
   const { pathname } = useLocation();
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [pathname]);
+
   return null;
-}
-
-/* ProtectedRoute wrapper
-   Replace the isAuthenticated check with your real auth logic:
-   - If you use Firebase: check firebaseAuth.currentUser or use useAuthState(...)
-   - If you use Auth context: read context value here
-*/
-function ProtectedRoute({ children }) {
-  const location = useLocation();
-
-  // === Example auth checks (choose one) ===
-  // 1) LocalStorage token (quick example)
-  const isAuthenticated = Boolean(localStorage.getItem("authToken"));
-
-  // 2) If you have an AuthContext:
-  // const { user } = useContext(AuthContext);
-  // const isAuthenticated = !!user;
-
-  // 3) If you use Firebase Auth (example):
-  // const [user, loading] = useAuthState(firebaseAuth);
-  // if (loading) return <LoadingComponent />;
-  // const isAuthenticated = !!user;
-
-  return isAuthenticated ? (
-    children
-  ) : (
-    <Navigate to="/login" replace state={{ from: location }} />
-  );
 }
 
 export default function App() {
@@ -55,18 +29,20 @@ export default function App() {
 
   useEffect(() => {
     const onScroll = () => setShowButton(window.scrollY > 300);
+
     onScroll();
+
     window.addEventListener("scroll", onScroll);
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Hide horizontal overflow globally to eliminate the right-side gap/scroll
+  // Prevent horizontal scrolling
   useEffect(() => {
     const prevOverflowX = document.documentElement.style.overflowX;
     const prevBodyMargin = document.body.style.margin;
-    // hide horizontal overflow but keep vertical scrolling
+
     document.documentElement.style.overflowX = "hidden";
-    // ensure body has no default margin that can create gaps
     document.body.style.margin = "0";
 
     return () => {
@@ -75,46 +51,51 @@ export default function App() {
     };
   }, []);
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  const scrollToTop = () =>
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
 
   return (
-    // Top-level wrapper prevents children from exceeding viewport width
     <div className="min-h-screen w-screen overflow-x-hidden antialiased">
       <ScrollToTopOnRouteChange />
 
-      {/* Only Route (or Fragment) components as direct children of Routes */}
       <Routes>
         <Route path="/" element={<Home />} />
+
         <Route path="/watches" element={<Watches />} />
-        <Route path="/brands/:brandName" element={<Brand />} />
+
+        <Route
+          path="/brands/:brandName"
+          element={<Brand />}
+        />
+
         <Route path="/contact" element={<Contact />} />
+
         <Route path="/login" element={<Login />} />
+
         <Route path="/signup" element={<SignUp />} />
 
-        {/* Protected /cart route */}
+        {/* Cart without login protection */}
+        <Route path="/cart" element={<Cart />} />
+
+        {/* Orders page */}
+        <Route path="/my-orders" element={<Orders />} />
+
+        {/* Payment pages */}
         <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          }
+          path="/orders/success"
+          element={<VerifyPaymentPage />}
         />
 
-        {/* Optionally protect orders too */}
         <Route
-          path="/my-orders"
-          element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          }
+          path="/orders/cancel"
+          element={<VerifyPaymentPage />}
         />
-        <Route path="/orders/success" element={<VerifyPaymentPage />} />
-        <Route path="/orders/cancel" element={<VerifyPaymentPage />} />
       </Routes>
 
-      {/* Floating scroll-to-top button (outside <Routes>) */}
+      {/* Scroll to top button */}
       <button
         onClick={scrollToTop}
         aria-label="Scroll to top"

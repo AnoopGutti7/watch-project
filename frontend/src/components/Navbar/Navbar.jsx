@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Clock, BaggageClaim, User, Menu, X } from "lucide-react";
 import { useCart } from "../../CartContext";
 import { navbarStyles } from "../../assets/dummyStyles";
+import { clearAuthStorage, getAuthToken } from "../../utils/authStorage";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -20,14 +21,7 @@ export default function Navbar() {
   const { totalItems, clearCart, reloadCart } = useCart();
 
   const [loggedIn, setLoggedIn] = useState(() => {
-    try {
-      return (
-        localStorage.getItem("isLoggedIn") === "true" ||
-        !!localStorage.getItem("authToken")
-      );
-    } catch {
-      return false;
-    }
+    return Boolean(getAuthToken());
   });
 
   useEffect(() => setActive(location.pathname || "/"), [location]);
@@ -35,20 +29,19 @@ export default function Navbar() {
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key === "isLoggedIn" || e.key === "authToken") {
-        try {
-          const isNowLoggedIn =
-            localStorage.getItem("isLoggedIn") === "true" ||
-            !!localStorage.getItem("authToken");
-
-          setLoggedIn(isNowLoggedIn);
-        } catch {
-          setLoggedIn(false);
-        }
+        setLoggedIn(Boolean(getAuthToken()));
       }
     };
+    const onAuthChanged = (e) => {
+      setLoggedIn(Boolean(e?.detail?.loggedIn ?? getAuthToken()));
+    };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [loggedIn]);
+    window.addEventListener("authChanged", onAuthChanged);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("authChanged", onAuthChanged);
+    };
+  }, []);
 
   useEffect(() => {
     // Load cart on mount and whenever loggedIn becomes true
@@ -67,12 +60,10 @@ export default function Navbar() {
 
   const handleLogout = () => {
     try {
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("authToken");
       localStorage.removeItem("authtoken");
-      localStorage.removeItem("user");
       localStorage.removeItem("cart");
       localStorage.removeItem("cartItems");
+      clearAuthStorage();
     } catch (e) {}
     // ensure cart is emptied in memory/context
     try {

@@ -1,37 +1,55 @@
-import cors from 'cors';
-import 'dotenv/config';
-import express from 'express';
-import { connectDB } from './config/db.js';
-import path from 'path';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import fs from "fs";
 
-import userRouter from './routes/userRoute.js';
-import watchRouter from './routes/watchRoute.js';
-import cartRouter from './routes/cartRoute.js';
-import orderRouter from './routes/orderRoute.js';
+import { connectDB } from "./config/db.js";
+import userRouter from "./routes/userRoute.js";
+import cartRouter from "./routes/cartRoute.js";
+import orderRouter from "./routes/orderRoute.js";
+import watchRouter from "./routes/watchRoute.js";
+
+dotenv.config();
 
 const app = express();
-const port = 4000;
+const port = process.env.PORT || 4000;
 
-// Middleware
-app.use(cors())
+// ✅ MIDDLEWARE
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Database Connection
-connectDB();
+// ✅ STATIC UPLOADS
+const uploadsPath = path.join(process.cwd(), "uploads");
 
-// Routes
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath);
+}
+
+app.use("/uploads", express.static(uploadsPath));
+
+// ✅ ROUTES
 app.use("/api/auth", userRouter);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads"))); // serve uploaded images
+app.use("/api/cart", cartRouter);
+app.use("/api/orders", orderRouter);
 app.use("/api/watches", watchRouter);
-app.use('/api/cart', cartRouter)
-app.use("/api/orders", orderRouter)
 
-
-app.get('/', (req, res) => {
-    res.send('API Working');
+// ✅ TEST
+app.get("/", (req, res) => {
+  res.send("API Working ✅");
 });
 
-app.listen(port, () => {
-    console.log(`Server Started on http://localhost:${port}`);
-});
+// ✅ START SERVER
+const startServer = async () => {
+  try {
+    await connectDB(); // 🔥 MUST WORK
+
+    app.listen(port, () => {
+      console.log(`🚀 Server running on http://localhost:${port}`);
+    });
+  } catch (err) {
+    console.error("❌ Server failed:", err.message);
+  }
+};
+
+startServer();

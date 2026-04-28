@@ -3,7 +3,7 @@ import { User, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { api } from "../../utils/api";
 import { useCart } from "../../CartContext";
 import { loginPageStyles } from "../../assets/dummyStyles";
 
@@ -14,9 +14,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { loadCart } = useCart();
-
-  const API_BASE = "http://localhost:4000"; // change if needed
+  const { reloadCart } = useCart();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,22 +29,12 @@ const LoginPage = () => {
       return;
     }
 
-    if (!rememberMe) {
-      toast.error("You must agree to remember me.", {
-        position: "top-right",
-        autoClose: 4000,
-        theme: "light",
-      });
-      return;
-    }
-
     setSubmitting(true);
 
     try {
-      const resp = await axios.post(
-        `${API_BASE}/api/auth/login`,
-        { email: email.trim().toLowerCase(), password },
-        { headers: { "Content-Type": "application/json" } }
+      const resp = await api.post(
+        "/auth/login",
+        { email: email.trim().toLowerCase(), password }
       );
 
       const data = resp.data;
@@ -73,6 +61,7 @@ const LoginPage = () => {
         } catch (err) {
           // ignore environments that restrict CustomEvent
         }
+        reloadCart?.();
 
         toast.success(data.message || "Login successful!", {
           position: "top-right",

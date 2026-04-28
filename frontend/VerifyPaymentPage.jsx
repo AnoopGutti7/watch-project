@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getAuthToken } from "./src/utils/authStorage";
 
 const VerifyPaymentPage = () => {
   const [statusMsg, setStatusMsg] = useState("Verifying payment...");
@@ -18,7 +19,7 @@ const VerifyPaymentPage = () => {
       const rawSession = params.get("session_id");
       const session_id = rawSession ? rawSession.trim() : null;
       const payment_status = params.get("payment_status");
-      const token = localStorage.getItem("authToken");
+      const token = getAuthToken();
 
       // If user canceled on Stripe-hosted checkout page
       if (payment_status === "cancel") {
