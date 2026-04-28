@@ -35,7 +35,7 @@ const VerifyPaymentPage = () => {
       try {
         setStatusMsg("Confirming payment with server...");
 
-        const API_BASE = "http://localhost:4000";
+        const API_BASE = "https://watch-project-dcvf.onrender.com";
         const res = await axios.get(`${API_BASE}/api/orders/confirm`, {
           params: { session_id },
           headers: token ? { Authorization: `Bearer ${token}` } : {},
