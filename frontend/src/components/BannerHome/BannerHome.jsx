@@ -36,7 +36,7 @@ const BannerHome = () => {
           loop
           playsInline
           preload="metadata"
-          poster="/fallback.jpg"
+          poster="/images/default-watch.jpg"
           aria-hidden="true"
           role="presentation"
         >
