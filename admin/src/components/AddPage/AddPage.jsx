@@ -25,7 +25,7 @@ export default function AddPage() {
   const [brandName, setBrandName] = useState("");
 
   const inputRef = useRef(null);
-  const API_BASE = "http://localhost:4000";
+  const API_BASE = "https://watch-project-dcvf.onrender.com";
   const BRANDS = [
     "Rolex",
     "Omega",

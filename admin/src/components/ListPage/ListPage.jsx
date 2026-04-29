@@ -11,7 +11,7 @@ export default function ListPage() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
 
-  const API_BASE = "http://localhost:4000";
+  const API_BASE = "https://watch-project-dcvf.onrender.com";
   const LIST_PATH = "/api/watches";
 
   // Normalize image URLs so deployed admin doesn't try to reach localhost

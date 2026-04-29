@@ -14,8 +14,7 @@ import {
 } from "lucide-react";
 import { bookingStyles, statusBadgeStyles, paymentBadgeStyles, badgeBaseStyles, paymentBadgeBaseStyles } from "../../assets/dummyStyles";
 
-const API_BASE = "http://localhost:4000/api";
-
+const API_BASE = "https://watch-project-dcvf.onrender.com/api";
 const axiosInstance = axios.create({ baseURL: API_BASE });
 axiosInstance.interceptors.request.use((cfg) => {
   const token = localStorage.getItem("authtoken");

@@ -15,37 +15,50 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 
-// ✅ MIDDLEWARE
-app.use(cors());
+// ✅ CORS FIX
+app.use(
+  cors({
+    origin: "https://watch-project-seven.vercel.app",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// ✅ Handle preflight requests
+app.options("*", cors());
+
+// ✅ JSON Middleware
 app.use(express.json());
 
-// ✅ STATIC UPLOADS
+// ✅ Uploads Folder
 const uploadsPath = path.join(process.cwd(), "uploads");
 
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath);
 }
 
+// ✅ Static Upload Route
 app.use("/uploads", express.static(uploadsPath));
 
-// ✅ ROUTES
-app.use("/api/auth", userRouter);
-app.use("/api/cart", cartRouter);
-app.use("/api/orders", orderRouter);
-app.use("/api/watches", watchRouter);
+// ✅ API Routes
+app.use("/auth", userRouter);
+app.use("/cart", cartRouter);
+app.use("/orders", orderRouter);
+app.use("/watches", watchRouter);
 
-// ✅ TEST
+// ✅ Test Route
 app.get("/", (req, res) => {
   res.send("API Working ✅");
 });
 
-// ✅ START SERVER
+// ✅ Start Server
 const startServer = async () => {
   try {
-    await connectDB(); // 🔥 MUST WORK
+    await connectDB();
 
     app.listen(port, () => {
-      console.log(`🚀 Server running on http://localhost:${port}`);
+      console.log(`🚀 Server running on port ${port}`);
     });
   } catch (err) {
     console.error("❌ Server failed:", err.message);

@@ -19,7 +19,7 @@ export default function OrdersPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get("/api/orders/my");
+      const res = await api.get("/orders/my");
       const payload = res?.data;
       const list = Array.isArray(payload?.orders)
         ? payload.orders
