@@ -26,7 +26,7 @@ import TH5 from "../../assets/TH5.png";
 import B1 from "../../assets/B1.png";
 import B2 from "../../assets/B2.png";
 import B3 from "../../assets/B3.png";
-import B4 from "../../assets/B4.png";
+import B4 from "../../assets/B4.PNG";
 import B5 from "../../assets/B5.png";
 import C1 from "../../assets/C1.png";
 import C2 from "../../assets/C2.png";
