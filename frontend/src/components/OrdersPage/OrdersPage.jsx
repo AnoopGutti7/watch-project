@@ -95,7 +95,7 @@ export default function OrdersPage() {
       )
     );
     try {
-      await api.put(`/api/orders/${id}`, { orderStatus: "Cancelled" });
+      await api.put(`/orders/${id}`, { orderStatus: "Cancelled" });
     } catch (err) {
       if (err?.response?.status === 401) clearAuthStorage();
       console.error("Cancel order failed", err);
