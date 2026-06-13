@@ -18,11 +18,10 @@ const port = process.env.PORT || 4000;
 // CORS
 const allowedOrigins = [
   process.env.FRONTEND_URL?.replace(/\/$/, ""),
-  "https://watch-project-mmta.vercel.app",
+  "https://watch-project-p61t.vercel.app",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
 ].filter(Boolean);
-
 app.use(
   cors({
     origin: (origin, callback) => {
