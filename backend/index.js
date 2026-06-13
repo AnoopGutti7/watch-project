@@ -18,6 +18,7 @@ const port = process.env.PORT || 4000;
 // ✅ CORS FIX
 const allowedOrigins = [
   process.env.FRONTEND_URL?.replace(/\/$/, ""),
+  "https://watch-project-mmta.vercel.app",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
 ].filter(Boolean);
