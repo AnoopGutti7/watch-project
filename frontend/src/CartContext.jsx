@@ -184,7 +184,7 @@ export const CartProvider = ({ children }) => {
       quantity: 1,
       name: product.name ?? "",
       img: product.img ?? product.image ?? "",
-      price: Number(product.price ?? 0),
+      price: parsePrice(product.price),
       description: product.description,
     };
 
@@ -211,7 +211,7 @@ export const CartProvider = ({ children }) => {
       productId: id,
       name: product.name ?? "",
       img: product.img ?? "",
-      price: Number(product.price ?? 0),
+      price: parsePrice(product.price),
       quantity: 1,
       description: product.description,
     });
