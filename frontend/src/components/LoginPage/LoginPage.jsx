@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { User, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../utils/api";
 import { useCart } from "../../CartContext";
 import { loginPageStyles } from "../../assets/dummyStyles";
@@ -245,9 +245,9 @@ const LoginPage = () => {
             <span className={loginPageStyles.signupText}>
               Don't have an account?{" "}
             </span>
-            <a href="/signup" className={loginPageStyles.signupLink}>
+            <Link to="/signup" className={loginPageStyles.signupLink}>
               Sign Up
-            </a>
+            </Link>
           </div>
         </div>
       </div>

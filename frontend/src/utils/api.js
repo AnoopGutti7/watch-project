@@ -6,7 +6,7 @@ import { getAuthToken } from "./authStorage";
  */
 export const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  "https://watch-project-dcvf.onrender.com/api";
+  "/api";
 
 /**
  * Axios instance

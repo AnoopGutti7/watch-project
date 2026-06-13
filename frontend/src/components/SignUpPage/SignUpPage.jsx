@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ArrowLeft, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../utils/api";
 import { signUpStyles } from "../../assets/dummyStyles";
 
@@ -59,9 +59,19 @@ export default function SignUpPage() {
         if (rememberMe) {
           localStorage.setItem("authToken", data.token);
           localStorage.setItem("user", JSON.stringify(data.user ?? {}));
+          localStorage.setItem("isLoggedIn", "true");
         } else {
           sessionStorage.setItem("authToken", data.token);
           sessionStorage.setItem("user", JSON.stringify(data.user ?? {}));
+          sessionStorage.setItem("isLoggedIn", "true");
+        }
+
+        try {
+          window.dispatchEvent(
+            new CustomEvent("authChanged", { detail: { loggedIn: true } })
+          );
+        } catch (err) {
+          // ignore environments that restrict CustomEvent
         }
 
         toast.success(data.message || "Signup successful", {
@@ -232,9 +242,9 @@ export default function SignUpPage() {
             <span className={signUpStyles.bottomText}>
               Already have an account?{" "}
             </span>
-            <a href="/login" className={signUpStyles.loginLink}>
+            <Link to="/login" className={signUpStyles.loginLink}>
               Login
-            </a>
+            </Link>
           </div>
         </div>
       </div>

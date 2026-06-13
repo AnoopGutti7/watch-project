@@ -1,4 +1,5 @@
 import express from "express";
+import authMiddleware from "../middlewares/auth.js";
 import {
   createOrder,
   confirmPayment,
@@ -7,15 +8,14 @@ import {
   updateOrder,
   deleteOrder,
 } from "../controllers/orderController.js";
-import authMiddleware from "../middlewares/auth.js"; 
 
-const orderRouter = express.Router();
+const router = express.Router();
 
-orderRouter.post("/", authMiddleware, createOrder);
-orderRouter.get("/confirm", confirmPayment);
-orderRouter.get("/my", authMiddleware, getUserOrders);
-orderRouter.get("/", getOrders);
-orderRouter.put("/:id", updateOrder);
-orderRouter.delete("/:id", deleteOrder);
+router.post("/", authMiddleware, createOrder);
+router.get("/confirm", confirmPayment);
+router.get("/my", authMiddleware, getUserOrders);
+router.get("/", getOrders);
+router.put("/:id", updateOrder);
+router.delete("/:id", deleteOrder);
 
-export default orderRouter;
+export default router;

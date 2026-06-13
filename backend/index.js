@@ -16,9 +16,20 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // ✅ CORS FIX
+const allowedOrigins = [
+  process.env.FRONTEND_URL?.replace(/\/$/, ""),
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: "https://watch-project-seven.vercel.app",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -26,7 +37,7 @@ app.use(
 );
 
 // ✅ Handle preflight requests
-app.options("*", cors());
+app.options(/.*/, cors());
 
 // ✅ JSON Middleware
 app.use(express.json());
@@ -42,10 +53,10 @@ if (!fs.existsSync(uploadsPath)) {
 app.use("/uploads", express.static(uploadsPath));
 
 // ✅ API Routes
-app.use("/auth", userRouter);
-app.use("/cart", cartRouter);
-app.use("/orders", orderRouter);
-app.use("/watches", watchRouter);
+app.use("/api/auth", userRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/orders", orderRouter);
+app.use("/api/watches", watchRouter);
 
 // ✅ Test Route
 app.get("/", (req, res) => {
