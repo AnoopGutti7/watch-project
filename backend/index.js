@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 
-// ✅ CORS FIX
+// CORS
 const allowedOrigins = [
   process.env.FRONTEND_URL?.replace(/\/$/, ""),
   "https://watch-project-mmta.vercel.app",
@@ -29,42 +29,40 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      callback(new Error("Not allowed by CORS"));
+      console.log("Blocked Origin:", origin);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ Handle preflight requests
-app.options(/.*/, cors());
+app.options("*", cors());
 
-// ✅ JSON Middleware
 app.use(express.json());
 
-// ✅ Uploads Folder
+// Uploads
 const uploadsPath = path.join(process.cwd(), "uploads");
 
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath);
 }
 
-// ✅ Static Upload Route
 app.use("/uploads", express.static(uploadsPath));
 
-// ✅ API Routes
-app.use("/api/auth", userRouter);
-app.use("/api/cart", cartRouter);
-app.use("/api/orders", orderRouter);
-app.use("/api/watches", watchRouter);
+// ✅ Keep routes WITHOUT /api
+app.use("/auth", userRouter);
+app.use("/cart", cartRouter);
+app.use("/orders", orderRouter);
+app.use("/watches", watchRouter);
 
-// ✅ Test Route
+// Test
 app.get("/", (req, res) => {
   res.send("API Working ✅");
 });
 
-// ✅ Start Server
+// Start
 const startServer = async () => {
   try {
     await connectDB();
@@ -73,7 +71,7 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${port}`);
     });
   } catch (err) {
-    console.error("❌ Server failed:", err.message);
+    console.error("❌ Server failed:", err);
   }
 };
 
