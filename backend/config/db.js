@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const MONGO_URL =
-  process.env.MONGO_URL ||
+  process.env.MONGODB_URL ||
   "mongodb://127.0.0.1:27017/watch";
 
 export const connectDB = async () => {
